@@ -1,0 +1,7 @@
+{
+  "name": "LS6 Logs Reader & Servo Controller",
+  "description": "A high-performance web-based serial log reader and LS6 servo controller with Web Serial API support.",
+  "requestFramePermissions": [
+    "serial"
+  ]
+}
