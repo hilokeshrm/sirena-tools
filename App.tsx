@@ -151,7 +151,8 @@ const App: React.FC = () => {
     switch (format) {
       case 'batch': {
         // Format: id1:id2:id3:...:position1:position2:position3:...:velocity1:velocity2:velocity3:...
-        const ids = activeServos.map(s => s.id).join(':');
+        // Using servoId (1-based) instead of id (0-based) for device compatibility
+        const ids = activeServos.map(s => s.servoId).join(':');
         const positions = activeServos.map(s => 
           angleToPosition(s.angle, s.servoType, s.angleMode)
         ).join(':');
@@ -162,9 +163,10 @@ const App: React.FC = () => {
       }
       case 'interleaved': {
         // Format: id:position:velocity:id:position:velocity:id:position:velocity:...
+        // Using servoId (1-based) instead of id (0-based) for device compatibility
         const parts = activeServos.map(s => {
           const pos = angleToPosition(s.angle, s.servoType, s.angleMode);
-          return `${s.id}:${pos}:${s.velocity}`;
+          return `${s.servoId}:${pos}:${s.velocity}`;
         });
         const cmd = `LUCI_local 245 SetServoPartial:${parts.join(':')}`;
         await writeSerial(cmd);
@@ -172,9 +174,10 @@ const App: React.FC = () => {
       }
       case 'separate': {
         // Format: separate commands, one per line - send all servos sequentially
+        // Using servoId (1-based) for consistency, though id (0-based) might also work
         for (const s of activeServos) {
           const pos = angleToPosition(s.angle, s.servoType, s.angleMode);
-          const cmd = `LUCI_local 245 SetServoPartial:${s.id}:${pos}:${s.velocity}`;
+          const cmd = `LUCI_local 245 SetServoPartial:${s.servoId}:${pos}:${s.velocity}`;
           await writeSerial(cmd);
           // Small delay between commands to ensure proper serial transmission
           await new Promise(resolve => setTimeout(resolve, 10));
