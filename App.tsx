@@ -7,6 +7,7 @@ import Header from './components/Header';
 import CommandBar from './components/CommandBar';
 import Sidebar from './components/Sidebar';
 import SkillsManager from './components/SkillsManager';
+import SkillsTable from './components/SkillsTable';
 
 const App: React.FC = () => {
   const [port, setPort] = useState<any>(null);
@@ -146,38 +147,33 @@ const App: React.FC = () => {
 
   const formatServoCommands = async (servos: IndividualServoState[], format: CommandFormat): Promise<void> => {
     const activeServos = servos.filter(s => s.active ?? true);
-    if (activeServos.length === 0) return;
+    console.log('formatServoCommands called:', { totalServos: servos.length, activeServos: activeServos.length, format });
+    if (activeServos.length === 0) {
+      console.warn('No active servos to send commands to');
+      return;
+    }
 
     switch (format) {
       case 'batch': {
-        // Format: id1:id2:id3:...:position1:position2:position3:...:velocity1:velocity2:velocity3:...
-        // Using servoId (1-based) instead of id (0-based) for device compatibility
-        const ids = activeServos.map(s => s.servoId).join(':');
+        // Format: id1,id2,id3:position1:position2:position3:...:velocity1:velocity2:velocity3:...
+        // Using active ID (0-based) for commands
+        const ids = activeServos.map(s => s.id).join(',');
         const positions = activeServos.map(s => 
           angleToPosition(s.angle, s.servoType, s.angleMode)
         ).join(':');
         const velocities = activeServos.map(s => s.velocity).join(':');
         const cmd = `LUCI_local 245 SetServoPartial:${ids}:${positions}:${velocities}`;
-        await writeSerial(cmd);
-        break;
-      }
-      case 'interleaved': {
-        // Format: id:position:velocity:id:position:velocity:id:position:velocity:...
-        // Using servoId (1-based) instead of id (0-based) for device compatibility
-        const parts = activeServos.map(s => {
-          const pos = angleToPosition(s.angle, s.servoType, s.angleMode);
-          return `${s.servoId}:${pos}:${s.velocity}`;
-        });
-        const cmd = `LUCI_local 245 SetServoPartial:${parts.join(':')}`;
+        console.log('Sending batch command:', cmd);
         await writeSerial(cmd);
         break;
       }
       case 'separate': {
         // Format: separate commands, one per line - send all servos sequentially
-        // Using servoId (1-based) for consistency, though id (0-based) might also work
+        // Using active ID (0-based) for commands
         for (const s of activeServos) {
           const pos = angleToPosition(s.angle, s.servoType, s.angleMode);
-          const cmd = `LUCI_local 245 SetServoPartial:${s.servoId}:${pos}:${s.velocity}`;
+          const cmd = `LUCI_local 245 SetServoPartial:${s.id}:${pos}:${s.velocity}`;
+          console.log('Sending separate command:', cmd);
           await writeSerial(cmd);
           // Small delay between commands to ensure proper serial transmission
           await new Promise(resolve => setTimeout(resolve, 10));
@@ -247,12 +243,12 @@ const App: React.FC = () => {
                     >
                       Monitor
                     </button>
-                    {/* <button 
+                    <button 
                       onClick={() => setViewMode('skills')}
                       className={`text-[9px] font-black uppercase tracking-widest py-1 border-b-2 transition-all ${viewMode === 'skills' ? 'border-[#ff4d00] text-[#1a1a1a]' : 'border-transparent text-[#aaa]'}`}
                     >
                       Skills
-                    </button> */}
+                    </button>
                   </div>
                   {viewMode === 'monitor' && (
                     <div className="flex items-center gap-2 flex-1 max-w-xs">
@@ -287,10 +283,13 @@ const App: React.FC = () => {
                    log.type.toLowerCase().includes(searchTerm.toLowerCase())
                  )} />
                ) : (
-                 <SkillsManager 
+                 <SkillsTable 
                     currentServos={servoConfig.servos} 
                     onExecuteFrame={executeSkillFrame}
                     connected={status.connected}
+                    commandFormat={commandFormat}
+                    servoConfig={servoConfig}
+                    onServoConfigChange={setServoConfig}
                  />
                )}
             </div>

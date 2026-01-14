@@ -54,7 +54,7 @@ export interface SerialStatus {
 
 export type ProductType = 'Nino' | 'Nino T' | 'Perro' | 'Twist' | 'Robotic Arm V1' | 'Robotic Arm V2' | 'Daisy Chain' | null;
 
-export type CommandFormat = 'batch' | 'interleaved' | 'separate';
+export type CommandFormat = 'batch' | 'separate';
 
 export const PRODUCT_PRESETS: Record<string, { count: number; ids: number[] }> = {
   'Nino': { count: 2, ids: [1, 2] },

@@ -56,20 +56,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                   ? 'bg-[#ff4d00] text-white'
                   : 'bg-[#fafafa] text-[#888] hover:bg-white'
               }`}
-              title="Batch: id1:id2:...:pos1:pos2:...:vel1:vel2:..."
+              title="Batch: id1,id2,id3:pos1:pos2:pos3:...:vel1:vel2:vel3:..."
             >
               Batch
-            </button>
-            <button
-              onClick={() => onCommandFormatChange('interleaved')}
-              className={`text-[7px] font-black uppercase px-2 py-0.5 rounded te-border transition-all ${
-                commandFormat === 'interleaved'
-                  ? 'bg-[#ff4d00] text-white'
-                  : 'bg-[#fafafa] text-[#888] hover:bg-white'
-              }`}
-              title="Interleaved: id:pos:vel:id:pos:vel:..."
-            >
-              Interleaved
             </button>
             <button
               onClick={() => onCommandFormatChange('separate')}
